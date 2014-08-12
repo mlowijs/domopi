@@ -1,7 +1,7 @@
 import json
 import urllib.request
 
-API_ENDPOINT_BASE = "https://rest.messagebird.com"
+API_ENDPOINT = "rest.messagebird.com"
 
 
 class MessageBird:
@@ -15,7 +15,7 @@ class MessageBird:
                                   "body": body})
 
         try:
-            return self._do_http("POST", "/messages", message)
+            return self._do_http("POST", "messages", message)
         except:
             raise
 
@@ -24,25 +24,25 @@ class MessageBird:
     #
     def _do_http(self, method, endpoint, body=None):
         try:
-            request = urllib.request.Request(API_ENDPOINT_BASE + endpoint, body,
+            request = urllib.request.Request("https://{}/{}".format(API_ENDPOINT, endpoint), body,
                                              {"Authorization": "AccessKey {}".format(self._api_key),
                                               "Accept": "application/json"}, method=method)
         except:
             raise
 
         response = urllib.request.urlopen(request)
-        responseObject = json.loads(response.read().decode("utf-8"))
+        response_object = json.loads(response.read().decode("utf-8"))
 
         if not response.getcode() in [200, 201]:
-            raise MessageBirdError(responseObject)
+            raise MessageBirdError(response_object)
 
-        return responseObject
+        return response_object
 
 
 class MessageBirdError(Exception):
-    def __init__(self, object):
+    def __init__(self, error_object):
         self.message = "There is an error in your entity: {}".format(object["errors"][0]["description"])
-        self.object = object
+        self.error_object = error_object
 
     def __str__(self):
         return self.message

@@ -52,7 +52,7 @@ class Pin:
     def set_name(self, name):
         self._name = name
 
-    def set_state(self, state: bool):
+    def set_state(self, state):
         """ Set the state of a pin, i.e. on (True) or off (False). """
 
         if self._direction == INPUT:
@@ -63,7 +63,7 @@ class Pin:
 
         self._state = bool(state)
 
-    def monitor(self, callback, edge: int=BOTH_EDGES):
+    def monitor(self, callback, edge=BOTH_EDGES):
         """ Monitors a pin's state and calls the callback when it changes. """
 
         if self.get_direction() == OUTPUT:
@@ -99,7 +99,7 @@ class Pin:
             old_state = new_state
 
 
-def export_pin(number: int, direction: int) -> Pin:
+def export_pin(number, direction):
     """ Exports a pin for use as GPIO if it isn't and returns a Pin object. """
 
     if any(pin for pin in _exported_pins if pin.get_number() == number):

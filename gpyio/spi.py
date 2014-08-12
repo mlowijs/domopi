@@ -16,7 +16,6 @@ class Spi:
 
         self._device = device
         self._port = port
-        self._transfer_struct = struct.Struct("L L I I H B B I")
 
     #
     # Public methods
