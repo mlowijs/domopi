@@ -15,6 +15,12 @@ class Pushbullet:
                                             "title": title,
                                             "body": body}))
 
+    def push_link(self, title, url, body):
+        self._do_post("pushes", json.dumps({"type": "link",
+                                            "title": title,
+                                            "url": url,
+                                            "body": body}))
+
     # Private methods
     def _do_post(self, endpoint, body):
         try:
@@ -27,8 +33,9 @@ class Pushbullet:
 
         response_object = json.loads(response.read().decode("utf-8"))
 
-        if not response.get_code() == 200:
+        if not response.status == 200:
             raise PushbulletError(response_object)
+
 
 class PushbulletError(Exception):
     def __init__(self, error_object):

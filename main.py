@@ -9,6 +9,11 @@ def doorbell_pressed(pin, state):
 
 pb = Pushbullet("v1TiTlSs2yJMAlkkyvyC2j9RpbZNrVmulgujyXFSvH0zA")
 
+
+pb.push_link("title!", "http://google.nl", "body!")
+
+exit()
+
 doorbell_pin = gpio.export_pin(18, gpio.INPUT)
 doorbell_pin.monitor(doorbell_pressed, gpio.RISING_EDGE)
 

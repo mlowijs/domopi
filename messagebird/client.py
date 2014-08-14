@@ -1,7 +1,7 @@
 import json
-import http.client
+from urllib.request import urlopen, Request
 
-API_ENDPOINT = "rest.messagebird.com"
+API_BASE_URL = "https://rest.messagebird.com"
 
 
 class MessageBird:
@@ -24,17 +24,16 @@ class MessageBird:
     #
     def _do_http(self, method, endpoint, body=None):
         try:
-            client = http.client.HTTPSConnection(API_ENDPOINT, 443)
-
-            client.request(method, endpoint, body, {"Authorization": "AccessKey {}".format(self._api_key),
-                                                    "Accept": "application/json"})
-            response = client.getresponse()
+            response = urlopen(Request("{}/{}".format(API_BASE_URL, endpoint), body.encode(),
+                                       {"Authorization": "AccessKey {}".format(self._api_key),
+                                        "Accept": "application/json",
+                                        "Length": len(body)}, method=method))
         except:
             raise
 
         response_object = json.loads(response.read().decode("utf-8"))
 
-        if not response.getcode() in [200, 201]:
+        if not response.status in [200, 201]:
             raise MessageBirdError(response_object)
 
         return response_object
