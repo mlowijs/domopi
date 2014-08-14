@@ -15,7 +15,7 @@ class Pushbullet:
                                             "title": title,
                                             "body": body}))
 
-    def push_link(self, title, url, body):
+    def push_link(self, url, title, body):
         self._do_post("pushes", json.dumps({"type": "link",
                                             "title": title,
                                             "url": url,
