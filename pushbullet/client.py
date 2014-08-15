@@ -1,4 +1,5 @@
 import json
+import mimetypes
 from pathlib import Path
 import requests
 from requests.auth import HTTPBasicAuth
@@ -21,9 +22,12 @@ class Pushbullet:
                                  "url": url,
                                  "body": body})
 
-    def push_file(self, file_path, mime_type, body):
+    def push_file(self, file_path, body=None, mime_type=None):
         path = Path(file_path)
         file_name = path.parts[-1]
+
+        if mime_type is None:
+            mime_type = mimetypes.guess_type(file_path)
 
         # Request file upload
         response = self._request_upload(file_name, mime_type)

@@ -8,7 +8,7 @@ def doorbell_pressed(pin, state):
 
 
 pb = Pushbullet("v1TiTlSs2yJMAlkkyvyC2j9RpbZNrVmulgujyXFSvH0zA")
-pb.push_file("C:\\img.jpg", "image/jpg", "body!")
+pb.push_file("C:\\img.jpg", "body!")
 
 exit()
 
