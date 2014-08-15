@@ -1,16 +1,29 @@
+from avpy import fswebcam
 from gpyio import gpio
+from pathlib import Path
 from pushbullet.client import Pushbullet
 import time
 
 
+SNAPSHOT_DIR = "snaps"
+
+
 def doorbell_pressed(pin, state):
-    pb.push_note("Doorbell pressed", time.strftime("Time: %H:%m:%S"))
+    now = time.localtime()
+    image_path = time.strftime(SNAPSHOT_DIR + "/%Y%m%d%H%M%S.jpg", now)
+
+    fswebcam.save_image(image_path)
+    pb.push_file(image_path, "Doorbell pressed!")
 
 
+# Create snapshot directory
+snapshot_dir = Path(SNAPSHOT_DIR)
+
+if not snapshot_dir.exists():
+    snapshot_dir.mkdir()
+
+# Setup Pushbullet and the input pin
 pb = Pushbullet("v1TiTlSs2yJMAlkkyvyC2j9RpbZNrVmulgujyXFSvH0zA")
-pb.push_file("C:\\img.jpg", "body!")
-
-exit()
 
 doorbell_pin = gpio.export_pin(18, gpio.INPUT)
 doorbell_pin.monitor(doorbell_pressed, gpio.RISING_EDGE)

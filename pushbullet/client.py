@@ -27,7 +27,7 @@ class Pushbullet:
         file_name = path.parts[-1]
 
         if mime_type is None:
-            mime_type = mimetypes.guess_type(file_path)
+            mime_type, _ = mimetypes.guess_type(file_name)
 
         # Request file upload
         response = self._request_upload(file_name, mime_type)
