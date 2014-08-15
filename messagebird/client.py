@@ -1,5 +1,5 @@
 import json
-from urllib.request import urlopen, Request
+import requests
 
 API_BASE_URL = "https://rest.messagebird.com"
 
@@ -24,10 +24,12 @@ class MessageBird:
     #
     def _do_http(self, method, endpoint, body=None):
         try:
-            response = urlopen(Request("{}/{}".format(API_BASE_URL, endpoint), body.encode(),
-                                       {"Authorization": "AccessKey {}".format(self._api_key),
-                                        "Accept": "application/json",
-                                        "Length": len(body)}, method=method))
+            if body:
+                body = json.dumps(body)
+
+            response = requests.request(method, "{}/{}".format(API_BASE_URL, endpoint), body,
+                                        headers={"Authorization": "AccessKey {}".format(self._api_key),
+                                                 "Accept": "application/json"})
         except:
             raise
 

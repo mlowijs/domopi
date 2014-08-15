@@ -2,15 +2,13 @@ from gpyio import gpio
 from pushbullet.client import Pushbullet
 import time
 
+
 def doorbell_pressed(pin, state):
     pb.push_note("Doorbell pressed", time.strftime("Time: %H:%m:%S"))
 
 
 pb = Pushbullet("v1TiTlSs2yJMAlkkyvyC2j9RpbZNrVmulgujyXFSvH0zA")
-
-
-#pb.push_link("title!", "http://google.nl", "body!")
-pb.push_note("title!!", "body!!")
+pb.push_file("C:\\img.jpg", "image/jpg", "body!")
 
 exit()
 

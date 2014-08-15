@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -21,15 +22,39 @@ class Pushbullet:
                                  "body": body})
 
     def push_file(self, file_path, mime_type, body):
-        response = self._request_upload(file_path, mime_type)
+        path = Path(file_path)
+        file_name = path.parts[-1]
+
+        # Request file upload
+        response = self._request_upload(file_name, mime_type)
+
+        # Upload file
+        self._do_upload(file_path, response["upload_url"], response["data"])
+
+        # Send push
+        self._do_post("pushes", {"type": "file",
+                                 "file_name": file_name,
+                                 "file_type": mime_type,
+                                 "file_url": response["file_url"],
+                                 "body": body})
 
     # Private methods
-    def _request_upload(self, file_path, mime_type):
-        pass
+    def _request_upload(self, file_name, mime_type):
+        return self._do_post("upload-request", {"file_name": file_name,
+                                                "file_type": mime_type})
+
+    def _do_upload(self, file_path, upload_url, data):
+        try:
+            response = requests.post(upload_url, data, files={"file": open(file_path, "rb")})
+        except:
+            raise
+
+        if not response.status_code == 204:
+            response.raise_for_status()
 
     def _do_post(self, endpoint, body):
         try:
-            body = json.dumps(body).encode("utf-8")
+            body = json.dumps(body)
 
             response = requests.post("{}/{}".format(API_BASE_URL, endpoint), body,
                                      auth=HTTPBasicAuth(self._access_token, ""),
