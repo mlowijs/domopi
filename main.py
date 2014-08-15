@@ -10,10 +10,10 @@ SNAPSHOT_DIR = "snaps"
 
 def doorbell_pressed(pin, state):
     now = time.localtime()
-    image_path = time.strftime(SNAPSHOT_DIR + "/%Y%m%d%H%M%S.jpg", now)
+    image_path = "{}/Doorbell-{:.0f}.jpg".format(SNAPSHOT_DIR, time.mktime(now))
 
     fswebcam.save_image(image_path)
-    pb.push_file(image_path, "Doorbell pressed!")
+    pb.push_file(image_path, time.strftime("Doorbell rang (%d-%m-%Y %H:%M:%S)", now))
 
 
 # Create snapshot directory
