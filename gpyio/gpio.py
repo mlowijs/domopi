@@ -1,4 +1,6 @@
-from os import path
+import ctypes
+import mmap
+import os
 from threading import Thread
 from time import sleep
 
@@ -9,7 +11,15 @@ FALLING_EDGE = 0
 RISING_EDGE = 1
 BOTH_EDGES = 2
 
+PULL_DOWN = 1
+PULL_UP = 2
+
+GPIO_BASE = 0x20000000 + 0x200000
+GPPUD = GPIO_BASE + 0x94
+GPPUDCLK0 = GPIO_BASE + 0x98
+
 _exported_pins = []
+_gpio_map = None
 
 
 class Pin:
@@ -63,6 +73,28 @@ class Pin:
 
         self._state = bool(state)
 
+    def set_resistor(self, direction):
+        # Write direction to GPPUD
+        _gpio_map.seek(GPPUD + 3)
+        _gpio_map.write_byte(direction)
+
+        # Sleep 150 cycles
+        sleep(0.1)
+
+        # Write pin number to GPPUDCLK0
+        _gpio_map.seek(GPPUDCLK0)
+        _gpio_map.write([b for b in (1 << self.get_number()).to_bytes(4, "little")])
+
+        # Sleep again
+        sleep(0.1)
+
+        # Clear GPPUD and GPPUDCLK0
+        _gpio_map.seek(GPPUD)
+        _gpio_map.write_byte(0)
+
+        _gpio_map.seek(GPPUDCLK0)
+        _gpio_map.write_byte(0)
+
     def monitor(self, callback, edge=BOTH_EDGES):
         """ Monitors a pin's state and calls the callback when it changes. """
 
@@ -99,8 +131,18 @@ class Pin:
             old_state = new_state
 
 
+def initialize():
+    global _gpio_map
+
+    with os.open("/dev/mem", os.O_RDWR) as fd:
+        _gpio_map = mmap.mmap(fd, 4096, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE)
+
+
 def export_pin(number, direction):
     """ Exports a pin for use as GPIO if it isn't and returns a Pin object. """
+    if _gpio_map is None:
+        pass
+        #initialize()
 
     if any(pin for pin in _exported_pins if pin.get_number() == number):
         raise ValueError("Pin {} is already exported".format(number))
@@ -108,7 +150,7 @@ def export_pin(number, direction):
     pin = Pin(number, direction)
     _exported_pins.append(pin)
 
-    if not path.exists("/sys/class/gpio/gpio{}".format(number)):
+    if not os.path.exists("/sys/class/gpio/gpio{}".format(number)):
         with open("/sys/class/gpio/export", "w") as f:
             f.write(str(number))
 
@@ -131,7 +173,11 @@ def unexport_pin(pin):
 
 
 def cleanup():
-    """ Calls unexport_pin for every exported pin. """
+    """ Closes the GPIO mmap and calls unexport_pin for every exported pin. """
+
+    if not _gpio_map is None:
+        _gpio_map.close()
 
     for pin in _exported_pins:
         unexport_pin(pin)
+
