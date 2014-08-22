@@ -1,6 +1,6 @@
-import ctypes
 import mmap
 import os
+import sys
 from threading import Thread
 from time import sleep
 
@@ -75,15 +75,15 @@ class Pin:
 
     def set_resistor(self, direction):
         # Write direction to GPPUD
-        _gpio_map.seek(GPPUD + 3)
-        _gpio_map.write_byte(direction)
+        _gpio_map.seek(GPPUD)
+        _gpio_map.write((1).to_bytes(4, sys.byteorder))
 
         # Sleep 150 cycles
         sleep(0.1)
 
         # Write pin number to GPPUDCLK0
         _gpio_map.seek(GPPUDCLK0)
-        _gpio_map.write([b for b in (1 << self.get_number()).to_bytes(4, "little")])
+        _gpio_map.write((1 << self.get_number()).to_bytes(4, sys.byteorder))
 
         # Sleep again
         sleep(0.1)
