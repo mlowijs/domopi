@@ -134,8 +134,9 @@ class Pin:
 def initialize():
     global _gpio_map
 
-    with os.open("/dev/mem", os.O_RDWR) as fd:
-        _gpio_map = mmap.mmap(fd, 4096, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE)
+    fd = os.open("/dev/mem", os.O_RDWR)
+    _gpio_map = mmap.mmap(fd, 4096, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE)
+    os.close(fd)
 
 
 def export_pin(number, direction):
