@@ -129,18 +129,10 @@ class Pin:
             old_state = new_state
 
 
-def initialize():
-    global _gpio_map
-
-    fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
-    _gpio_map = Mmap2(fd, 4096, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE, offset=GPIO_BASE)
-    os.close(fd)
-
-
 def export_pin(number, direction):
     """ Exports a pin for use as GPIO if it isn't and returns a Pin object. """
     if _gpio_map is None:
-        initialize()
+        _initialize_gpio_map()
 
     if any(pin for pin in _exported_pins if pin.get_number() == number):
         raise ValueError("Pin {} is already exported".format(number))
@@ -179,3 +171,10 @@ def cleanup():
     for pin in _exported_pins:
         unexport_pin(pin)
 
+
+def _initialize_gpio_map():
+    global _gpio_map
+
+    fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
+    _gpio_map = Mmap2(fd, 4096, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE, offset=GPIO_BASE)
+    os.close(fd)
