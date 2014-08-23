@@ -11,15 +11,22 @@ FALLING_EDGE = 0
 RISING_EDGE = 1
 BOTH_EDGES = 2
 
-PULL_DOWN = 1
-PULL_UP = 2
+RESISTOR_OFF = 0
+RESISTOR_PULLDOWN = 1
+RESISTOR_PULLUP = 2
 
-GPIO_BASE = 0x20000000 + 0x200000
-GPPUD = GPIO_BASE + 0x94
-GPPUDCLK0 = GPIO_BASE + 0x98
+GPIO_BASE = 0x20200000
+GPPUD = 0x94
+GPPUDCLK0 = 0x98
 
 _exported_pins = []
 _gpio_map = None
+
+
+class Mmap2(mmap.mmap):
+    def write_as_bytes(self, number, pos=0):
+        self.seek(pos, os.SEEK_SET)
+        self.write(number.to_bytes(4, sys.byteorder))
 
 
 class Pin:
@@ -74,26 +81,17 @@ class Pin:
         self._state = bool(state)
 
     def set_resistor(self, direction):
-        # Write direction to GPPUD
-        _gpio_map.seek(GPPUD)
-        _gpio_map.write((1).to_bytes(4, sys.byteorder))
-
-        # Sleep 150 cycles
+        # Write direction to GPPUD and sleep
+        _gpio_map.write_as_bytes(direction, GPPUD)
         sleep(0.1)
 
-        # Write pin number to GPPUDCLK0
-        _gpio_map.seek(GPPUDCLK0)
-        _gpio_map.write((1 << self.get_number()).to_bytes(4, sys.byteorder))
-
-        # Sleep again
+        # Write pin number to GPPUDCLK0 and sleep
+        _gpio_map.write_as_bytes(1 << self.get_number(), GPPUDCLK0)
         sleep(0.1)
 
         # Clear GPPUD and GPPUDCLK0
-        _gpio_map.seek(GPPUD)
-        _gpio_map.write_byte(0)
-
-        _gpio_map.seek(GPPUDCLK0)
-        _gpio_map.write_byte(0)
+        _gpio_map.write_as_bytes(0, GPPUD)
+        _gpio_map.write_as_bytes(0, GPPUDCLK0)
 
     def monitor(self, callback, edge=BOTH_EDGES):
         """ Monitors a pin's state and calls the callback when it changes. """
@@ -134,16 +132,15 @@ class Pin:
 def initialize():
     global _gpio_map
 
-    fd = os.open("/dev/mem", os.O_RDWR)
-    _gpio_map = mmap.mmap(fd, 4096, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE)
+    fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
+    _gpio_map = Mmap2(fd, 4096, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE, offset=GPIO_BASE)
     os.close(fd)
 
 
 def export_pin(number, direction):
     """ Exports a pin for use as GPIO if it isn't and returns a Pin object. """
     if _gpio_map is None:
-        pass
-        #initialize()
+        initialize()
 
     if any(pin for pin in _exported_pins if pin.get_number() == number):
         raise ValueError("Pin {} is already exported".format(number))

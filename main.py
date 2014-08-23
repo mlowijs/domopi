@@ -39,4 +39,5 @@ if not snapshot_dir.exists():
 pb = Pushbullet("v1TiTlSs2yJMAlkkyvyC2j9RpbZNrVmulgujyXFSvH0zA")
 
 doorbell_pin = gpio.export_pin(18, gpio.INPUT)
-doorbell_pin.monitor(doorbell_pressed, gpio.RISING_EDGE)
+doorbell_pin.set_resistor(gpio.RESISTOR_PULLUP)
+doorbell_pin.monitor(doorbell_pressed, gpio.FALLING_EDGE)
