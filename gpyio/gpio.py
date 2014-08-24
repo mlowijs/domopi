@@ -113,7 +113,6 @@ class Pin:
         if self.is_monitoring():
             raise ValueError("This pin is already being monitored")
 
-        self._monitoring = True
         self._monitor_thread = Thread(target=self._do_monitor_state, args=(callback, edge), daemon=False)
         self._monitor_thread.start()
 
@@ -124,6 +123,7 @@ class Pin:
     # Private methods
     #
     def _do_monitor_state(self, callback, edge):
+        self._monitoring = True
         old_state = self.get_state()
 
         while self.is_monitoring():
