@@ -34,6 +34,7 @@ class Pin:
         self._direction = direction
         self._name = "Pin {}".format(number)
         self._number = number
+        self._resistor_mode = RESISTOR_OFF
         self._state = None
 
         self._monitor_thread = None
@@ -54,6 +55,9 @@ class Pin:
     def get_number(self):
         return self._number
 
+    def get_resistor_mode(self):
+        return self._resistor_mode
+
     def get_state(self):
         if self.get_direction() == OUTPUT and not self.get_state() is None:
             return self._state
@@ -70,7 +74,7 @@ class Pin:
         self._name = name
 
     def set_state(self, state):
-        """ Set the state of a pin, i.e. on (True) or off (False). """
+        """ Sets the state of the pin, i.e. on (True) or off (False). """
 
         if self._direction == INPUT:
             raise IOError("Pin {} is exported as an input".format(self.get_number()))
@@ -80,9 +84,11 @@ class Pin:
 
         self._state = bool(state)
 
-    def set_resistor(self, direction):
+    def set_resistor(self, resistor_mode):
+        """ Enables or disables the pin's pull-up/down resistor. """
+
         # Write direction to GPPUD and sleep
-        _gpio_map.write_as_bytes(direction, GPPUD)
+        _gpio_map.write_as_bytes(resistor_mode, GPPUD)
         sleep(0.1)
 
         # Write pin number to GPPUDCLK0 and sleep
@@ -93,8 +99,10 @@ class Pin:
         _gpio_map.write_as_bytes(0, GPPUD)
         _gpio_map.write_as_bytes(0, GPPUDCLK0)
 
+        self._resistor_mode = resistor_mode
+
     def monitor(self, callback, edge=BOTH_EDGES):
-        """ Monitors a pin's state and calls the callback when it changes. """
+        """ Monitors the pin's state and calls the callback when it changes. """
 
         if self.get_direction() == OUTPUT:
             raise ValueError("Pin {} is exported as an output".format(self.get_number()))
@@ -151,10 +159,13 @@ def export_pin(number, direction):
 
 
 def unexport_pin(pin):
-    """ Stops monitoring of a Pin and unexports it. """
+    """ Stops monitoring of a Pin, disables the resistor and unexports it. """
 
     if pin.is_monitoring():
         pin.stop_monitoring()
+
+    if not pin.get_resistor_mode() == RESISTOR_OFF:
+        pin.set_resistor(RESISTOR_OFF)
 
     with open("/sys/class/gpio/unexport", "w") as f:
         f.write(str(pin.get_number()))
@@ -163,13 +174,13 @@ def unexport_pin(pin):
 
 
 def cleanup():
-    """ Closes the GPIO mmap and calls unexport_pin for every exported pin. """
-
-    if not _gpio_map is None:
-        _gpio_map.close()
+    """ Calls unexport_pin for every exported pin and closes the GPIO mmap. """
 
     for pin in _exported_pins:
         unexport_pin(pin)
+
+    if not _gpio_map is None:
+        _gpio_map.close()
 
 
 def _initialize_gpio_map():
