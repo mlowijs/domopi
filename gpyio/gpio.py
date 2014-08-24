@@ -76,7 +76,7 @@ class Pin:
     def set_state(self, state):
         """ Sets the state of the pin, i.e. on (True) or off (False). """
 
-        if self._direction == INPUT:
+        if self.get_direction() == INPUT:
             raise IOError("Pin {} is exported as an input".format(self.get_number()))
 
         with open("/sys/class/gpio/gpio{}/value".format(self._number), "w") as f:
@@ -86,6 +86,9 @@ class Pin:
 
     def set_resistor(self, resistor_mode):
         """ Enables or disables the pin's pull-up/down resistor. """
+
+        if self.get_direction() == OUTPUT:
+            raise IOError("Pin {} is exported as an output".format(self.get_number()))
 
         # Write direction to GPPUD and sleep
         _gpio_map.write_as_bytes(resistor_mode, GPPUD)
@@ -107,7 +110,7 @@ class Pin:
         if self.get_direction() == OUTPUT:
             raise ValueError("Pin {} is exported as an output".format(self.get_number()))
 
-        if self._monitoring:
+        if self.is_monitoring():
             raise ValueError("This pin is already being monitored")
 
         self._monitoring = True
@@ -123,15 +126,13 @@ class Pin:
     def _do_monitor_state(self, callback, edge):
         old_state = self.get_state()
 
-        while True:
-            if not self._monitoring:
-                break
-
+        while self.is_monitoring():
             new_state = self.get_state()
 
             if new_state != old_state:
-                if edge in [new_state, BOTH_EDGES]:
+                if edge in (new_state, BOTH_EDGES):
                     callback(self, new_state)
+
                 sleep(0.15)  # Wait 150 ms for debounce
 
             old_state = new_state
@@ -140,7 +141,7 @@ class Pin:
 def export_pin(number, direction):
     """ Exports a pin for use as GPIO if it isn't and returns a Pin object. """
     if _gpio_map is None:
-        _initialize_gpio_map()
+        _initialize()
 
     if any(pin for pin in _exported_pins if pin.get_number() == number):
         raise ValueError("Pin {} is already exported".format(number))
@@ -183,7 +184,7 @@ def cleanup():
         _gpio_map.close()
 
 
-def _initialize_gpio_map():
+def _initialize():
     global _gpio_map
 
     fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
