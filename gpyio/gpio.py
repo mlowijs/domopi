@@ -32,7 +32,6 @@ class Mmap2(mmap.mmap):
 class Pin:
     def __init__(self, number, direction):
         self._direction = direction
-        self._name = "Pin {}".format(number)
         self._number = number
         self._resistor_mode = RESISTOR_OFF
         self._state = None
@@ -41,16 +40,13 @@ class Pin:
         self._monitoring = False
 
     def __str__(self):
-        return self.get_name()
+        return str(self.get_number())
 
     def __eq__(self, other):
         return self.get_number() == other.get_number()
 
     def get_direction(self):
         return self._direction
-
-    def get_name(self):
-        return self._name
 
     def get_number(self):
         return self._number
@@ -69,9 +65,6 @@ class Pin:
 
     def is_monitoring(self):
         return self._monitoring
-
-    def set_name(self, name):
-        self._name = name
 
     def set_state(self, state):
         """ Sets the state of the pin, i.e. on (True) or off (False). """

@@ -1,4 +1,4 @@
-from avpy import fswebcam
+from avpy import fswebcam, mpg123
 from gpyio import gpio
 import os
 from pathlib import Path
@@ -7,10 +7,13 @@ import signal
 import time
 
 
+DOORBELL_FILE = "doorbell.mp3"
 SNAPSHOT_DIR = "snaps"
 
 
 def doorbell_pressed(pin, state):
+    #mpg123.play_sound(DOORBELL_FILE)
+
     now = time.localtime()
     image_path = "{}/Doorbell-{:.0f}.jpg".format(SNAPSHOT_DIR, time.mktime(now))
 
