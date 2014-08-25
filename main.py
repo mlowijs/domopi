@@ -12,7 +12,7 @@ SNAPSHOT_DIR = "snaps"
 
 
 def doorbell_pressed(pin, state):
-    #mpg123.play_sound(DOORBELL_FILE)
+    mpg123.play_sound(DOORBELL_FILE)
 
     now = time.localtime()
     image_path = "{}/Doorbell-{:.0f}.jpg".format(SNAPSHOT_DIR, time.mktime(now))
