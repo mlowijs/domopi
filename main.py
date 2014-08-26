@@ -6,10 +6,7 @@ from pushbullet.client import Pushbullet
 import signal
 import time
 
-
-DOORBELL_FILE = "/var/domopi/doorbell.mp3"
-SNAPSHOT_DIR = "/var/domopi/snaps"
-
+from constants import *
 
 def doorbell_pressed(pin, state):
     mpg123.play_sound(DOORBELL_FILE)
@@ -39,7 +36,7 @@ if not snapshot_dir.exists():
     snapshot_dir.mkdir(parents=True)
 
 # Setup Pushbullet and the input pin
-pb = Pushbullet("v1TiTlSs2yJMAlkkyvyC2j9RpbZNrVmulgujyXFSvH0zA")
+pb = Pushbullet(PUSHBULLET_API_KEY)
 
 doorbell_pin = gpio.export_pin(18, gpio.INPUT)
 doorbell_pin.set_resistor(gpio.RESISTOR_PULLUP)
