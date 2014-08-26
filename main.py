@@ -7,8 +7,8 @@ import signal
 import time
 
 
-DOORBELL_FILE = "doorbell.mp3"
-SNAPSHOT_DIR = "snaps"
+DOORBELL_FILE = "/var/domopi/doorbell.mp3"
+SNAPSHOT_DIR = "/var/domopi/snaps"
 
 
 def doorbell_pressed(pin, state):
@@ -36,7 +36,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 snapshot_dir = Path(SNAPSHOT_DIR)
 
 if not snapshot_dir.exists():
-    snapshot_dir.mkdir()
+    snapshot_dir.mkdir(parents=True)
 
 # Setup Pushbullet and the input pin
 pb = Pushbullet("v1TiTlSs2yJMAlkkyvyC2j9RpbZNrVmulgujyXFSvH0zA")
