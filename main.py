@@ -8,6 +8,7 @@ import time
 
 from constants import *
 
+
 def doorbell_pressed(pin, state):
     mpg123.play_sound(DOORBELL_FILE)
 
